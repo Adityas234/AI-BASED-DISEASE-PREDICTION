@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Smart Reminders - Healthcare App</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #b793db, #89b8ee);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(183, 147, 219, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem 2rem;
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            color: white;
+            font-size: 28px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-links a:hover {
+            color: #391e8f;
+            transform: translateY(-2px);
+        }
+        
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .back-btn:hover {
+            background: white;
+            color: #8b5cf6;
+            transform: translateY(-2px);
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-top: 100px;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Hero Section */
+        .feature-hero {
+            text-align: center;
+            padding: 3rem 0 5rem;
+        }
+        
+        .feature-icon-large {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #a855f7, #3b82f6);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            font-size: 3rem;
+            box-shadow: 0 10px 30px rgba(168, 85, 247, 0.3);
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .feature-hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #1e1b4b;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+        
+        .feature-hero p {
+            font-size: 1.3rem;
+            color: rgba(30, 27, 75, 0.8);
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            line-height: 1.6;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #e367fc, #64adff);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(227, 103, 252, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(227, 103, 252, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: #1e1b4b;
+            padding: 1rem 2rem;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .btn-secondary:hover {
+            background: white;
+            transform: translateY(-3px);
+        }
+        
+        /* Features Grid */
+        .features-section {
+            padding: 4rem 0;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1e1b4b;
+            margin-bottom: 1rem;
+        }
+        
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.1rem;
+            color: rgba(30, 27, 75, 0.7);
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(31, 38, 135, 0.3);
+        }
+        
+        .feature-card-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(45deg, #e367fc, #64adff);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 1.8rem;
+        }
+        
+        .feature-card h3 {
+            color: #1e1b4b;
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-card p {
+            color: rgba(30, 27, 75, 0.7);
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+        
+        /* Demo Section */
+        .demo-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 4rem 2rem;
+            margin: 4rem 0;
+            text-align: center;
+        }
+        
+        .demo-mockup {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 2rem;
+            max-width: 600px;
+            margin: 2rem auto;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .notification-preview {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .notification-content {
+            flex: 1;
+            text-align: left;
+        }
+        
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+        
+        .notification-text {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        /* Stats Section */
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin: 4rem 0;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1e1b4b;
+            display: block;
+        }
+        
+        .stat-label {
+            color: rgba(30, 27, 75, 0.7);
+            font-weight: 500;
+            margin-top: 0.5rem;
+        }
+        
+        /* CTA Section */
+        .final-cta {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            margin: 4rem 0 2rem;
+        }
+        
+        .final-cta h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1e1b4b;
+            margin-bottom: 1rem;
+        }
+        
+        .final-cta p {
+            font-size: 1.2rem;
+            color: rgba(30, 27, 75, 0.7);
+            margin-bottom: 2rem;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .feature-hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .feature-hero p {
+                font-size: 1.1rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .feature-card {
+                padding: 2rem;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn-primary, .btn-secondary {
+                width: 100%;
+                max-width: 280px;
+                text-align: center;
+            }
+            
+            .stats-section {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .demo-section {
+                padding: 2rem 1rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .feature-hero {
+                padding: 2rem 0 3rem;
+            }
+            
+            .feature-hero h1 {
+                font-size: 2rem;
+            }
+            
+            .feature-icon-large {
+                width: 80px;
+                height: 80px;
+                font-size: 2rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .stats-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .logo {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav>
+            <a href="#" class="logo">HealthCare</a>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#demo">Demo</a></li>
+                <li><a href="#stats">Benefits</a></li>
+            </ul>
+            <a href="#" class="back-btn">← Back to Home</a>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Hero Section -->
+            <section class="feature-hero">
+                <div class="feature-icon-large">
+                    🔔
+                </div>
+                <h1>Smart Reminders</h1>
+                <p>Personalized medication reminders and health check-up notifications to keep you on top of your healthcare routine.</p>
+                <div class="cta-buttons">
+                    <a href="#" class="btn-primary">Enable Reminders</a>
+                    <!-- <a href="#demo" class="btn-secondary">See How It Works</a> -->
+                </div>
+            </section>
+
+            <!-- Features Grid -->
+            <section class="features-section" id="features">
+                <h2 class="section-title">Powerful Reminder Features</h2>
+                <p class="section-subtitle">Our smart reminder system adapts to your lifestyle and ensures you never miss important health tasks.</p>
+                
+                <div class="features-grid">
+                    <!-- <div class="feature-card">
+                        <div class="feature-card-icon">⏰</div>
+                        <h3>Personalized Scheduling</h3>
+                        <p>Set custom reminder times that fit your daily routine. Morning pills, evening vitamins, or weekly check-ups - we've got you covered.</p>
+                    </div> -->
+                    
+                    <!-- <div class="feature-card">
+                        <div class="feature-card-icon">🎯</div>
+                        <h3>Smart Notifications</h3>
+                        <p>Intelligent notifications that learn from your behavior. Get gentle nudges when you need them, without being overwhelming.</p>
+                    </div> -->
+                    
+                    <div class="feature-card">
+                        <div class="feature-card-icon">📊</div>
+                        <h3>Progress Tracking</h3>
+                        <p>Monitor your medication adherence and health routine consistency with detailed analytics and progress reports.</p>
+                    </div>
+                    
+                    <!-- <div class="feature-card">
+                        <div class="feature-card-icon">🔄</div>
+                        <h3>Flexible Scheduling</h3>
+                        <p>Easily reschedule missed doses, set up recurring appointments, and manage complex medication routines with ease.</p>
+                    </div> -->
+                    
+                    <div class="feature-card">
+                        <div class="feature-card-icon">👥</div>
+                        <h3>Family Coordination</h3>
+                        <p>Coordinate care for family members with shared calendars and caregiver notifications for elderly or dependent care.</p>
+                    </div>
+                    
+                    <!-- <div class="feature-card">
+                        <div class="feature-card-icon">🏥</div>
+                        <h3>Doctor Integration</h3>
+                        <p>Sync with your healthcare provider's recommendations and automatically update your reminder schedule based on prescriptions.</p>
+                    </div> -->
+                </div>
+            </section>
+
+            <!-- Demo Section -->
+            <section class="demo-section" id="demo">
+                <h2 class="section-title">See It In Action</h2>
+                <p class="section-subtitle">Experience how our smart reminders keep you on track with your health goals.</p>
+                
+                <div class="demo-mockup">
+                    <div class="notification-preview">
+                        <div class="notification-icon">💊</div>
+                        <div class="notification-content">
+                            <div class="notification-title">Time for your medication</div>
+                            <div class="notification-text">Don't forget your morning vitamins - taken 3 days in a row!</div>
+                        </div>
+                    </div>
+                    
+                    <div class="notification-preview">
+                        <div class="notification-icon">🩺</div>
+                        <div class="notification-content">
+                            <div class="notification-title">Health check-up reminder</div>
+                            <div class="notification-text">Your annual physical is due next week. Book an appointment?</div>
+                        </div>
+                    </div>
+                    
+                    <div class="notification-preview">
+                        <div class="notification-icon">🎉</div>
+                        <div class="notification-content">
+                            <div class="notification-title">Milestone achieved!</div>
+                            <div class="notification-text">7-day medication streak completed. Keep up the great work!</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats Section -->
+            <section class="stats-section" id="stats">
+                <div class="stat-card">
+                    <span class="stat-number">95%</span>
+                    <span class="stat-label">Medication Adherence Rate</span>
+                </div>
+                
+                <div class="stat-card">
+                    <span class="stat-number">2.3M+</span>
+                    <span class="stat-label">Reminders Sent Daily</span>
+                </div>
+                
+                <div class="stat-card">
+                    <span class="stat-number">87%</span>
+                    <span class="stat-label">Users Stay Consistent</span>
+                </div>
+                
+                <div class="stat-card">
+                    <span class="stat-number">24/7</span>
+                    <span class="stat-label">Always Available</span>
+                </div>
+            </section>
+
+            <!-- Final CTA -->
+            <section class="final-cta">
+                <h2>Start Your Smart Reminder Journey</h2>
+                <p>Join millions who trust our intelligent reminder system to keep their health on track.</p>
+                <div class="cta-buttons">
+                    <a href="#" class="btn-primary">Get Started Free</a>
+                    <a href="#" class="btn-secondary">Learn More</a>
+                </div>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

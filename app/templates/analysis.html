@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Symptom Analyzer - Your Health Companion</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../static/css/analysis.css">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <a href="home2.html" class="logo">🩺 Your Health Companion</a>
+            <a href="/" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="hero-section">
+            <h1>AI Symptom Analyzer</h1>
+            <p>Describe your symptoms and get instant AI-powered health insights with possible conditions, treatments, and precautions.</p>
+        </div>
+
+        <div class="analysis-container">
+            <!-- Input Section -->
+            <div class="input-section">
+                <h2 class="section-title">
+                    <i class="fas fa-stethoscope"></i>
+                    Tell us your symptoms
+                </h2>
+
+                <div class="symptom-input">
+                    <label>Common Symptoms (click to select):</label>
+                    <div class="symptom-tags" id="commonSymptoms">
+                        <div class="symptom-tag" data-symptom="headache">Headache</div>
+                        <div class="symptom-tag" data-symptom="fever">Fever</div>
+                        <div class="symptom-tag" data-symptom="cough">Cough</div>
+                        <div class="symptom-tag" data-symptom="fatigue">Fatigue</div>
+                        <div class="symptom-tag" data-symptom="nausea">Nausea</div>
+                        <div class="symptom-tag" data-symptom="sore throat">Sore Throat</div>
+                        <div class="symptom-tag" data-symptom="body ache">Body Ache</div>
+                        <div class="symptom-tag" data-symptom="runny nose">Runny Nose</div>
+                        <div class="symptom-tag" data-symptom="dizziness">Dizziness</div>
+                        <div class="symptom-tag" data-symptom="chest pain">Chest Pain</div>
+                        <div class="symptom-tag" data-symptom="stomach pain">Stomach Pain</div>
+                        <div class="symptom-tag" data-symptom="vomiting">Vomiting</div>
+                    </div>
+                </div>
+
+                <div class="symptom-input">
+                    <label>Add custom symptom:</label>
+                    <div class="custom-symptom">
+                        <input type="text" id="customSymptom" placeholder="Enter your symptom...">
+                        <button class="add-btn" type="button" onclick="addCustomSymptom()">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+                </div>
+
+                <div class="selected-symptoms">
+                    <label>Selected Symptoms:</label>
+                    <div class="selected-list" id="selectedSymptoms">
+                        <p style="color: rgba(30, 27, 75, 0.5); margin: 0;">No symptoms selected yet...</p>
+                    </div>
+                </div>
+
+                <!-- Form to submit symptoms to Flask -->
+                <form method="POST" id="symptomForm">
+                    <input type="hidden" name="symptoms" id="symptomsInput">
+                    <button type="button" class="analyze-btn" id="analyzeBtn" onclick = "analyzeSymptoms()"disabled>
+                        <i class="fas fa-search"></i> Analyze My Symptoms
+                    </button>
+                </form>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection">
+    <h2 class="section-title">
+        <i class="fas fa-chart-line"></i>
+        Analysis Results
+    </h2>
+
+    {% if result %}
+    <div class="result-card disease-card">
+        <h3><i class="fas fa-diagnoses"></i> Major Disease</h3>
+        <p><strong>{{ result.major }}</strong></p>
+    </div>
+
+    <div class="result-card minor-disease-card">
+        <h3><i class="fas fa-notes-medical"></i> Minor Disease</h3>
+        <p><b>{{ result.minor }}</b></p>
+    </div>
+
+    <div class="result-card precaution-card">
+        <h3><i class="fas fa-shield-alt"></i> Precautions</h3>
+        <p><b>{{ result.precautions }}</b></p>
+    </div>
+
+    <div class="result-card medicine-card">
+        <h3><i class="fas fa-pills"></i> Recommended Medicines</h3>
+        <p><b>{{ result.medicines }}</b></p>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 2rem; color: rgba(30, 27, 75, 0.5);">
+        <i class="fas fa-clipboard-list" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+        <p>Select your symptoms and click "Analyze My Symptoms" to get your health insights.</p>
+    </div>
+    {% endif %}
+</div>
+        </div>
+
+        <div class="disclaimer">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p><strong>Medical Disclaimer:</strong> This tool is for informational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment. Always consult with a qualified healthcare provider for any medical concerns.</p>
+        </div>
+    </div>
+
+    <script>
+        let selectedSymptoms = new Set();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const symptomTags = document.querySelectorAll('.symptom-tag');
+            symptomTags.forEach(tag => {
+                tag.addEventListener('click', function() {
+                    const symptom = this.dataset.symptom;
+                    toggleSymptom(symptom, this);
+                });
+            });
+        });
+
+        function toggleSymptom(symptom, element) {
+            if (selectedSymptoms.has(symptom)) {
+                selectedSymptoms.delete(symptom);
+                element.classList.remove('selected');
+            } else {
+                selectedSymptoms.add(symptom);
+                element.classList.add('selected');
+            }
+            updateSelectedList();
+            updateAnalyzeButton();
+        }
+
+        function addCustomSymptom() {
+            const input = document.getElementById('customSymptom');
+            const symptom = input.value.trim().toLowerCase();
+            if (symptom && !selectedSymptoms.has(symptom)) {
+                selectedSymptoms.add(symptom);
+                input.value = '';
+                updateSelectedList();
+                updateAnalyzeButton();
+            }
+        }
+
+        function removeSymptom(symptom) {
+            selectedSymptoms.delete(symptom);
+            const commonTags = document.querySelectorAll('.symptom-tag');
+            commonTags.forEach(tag => {
+                if (tag.dataset.symptom === symptom) {
+                    tag.classList.remove('selected');
+                }
+            });
+            updateSelectedList();
+            updateAnalyzeButton();
+        }
+
+        function updateSelectedList() {
+            const container = document.getElementById('selectedSymptoms');
+            if (selectedSymptoms.size === 0) {
+                container.innerHTML = '<p style="color: rgba(30, 27, 75, 0.5); margin: 0;">No symptoms selected yet...</p>';
+                return;
+            }
+            let html = '';
+            selectedSymptoms.forEach(symptom => {
+                html += `<span class="selected-item">
+                    ${symptom}
+                    <span class="remove-symptom" onclick="removeSymptom('${symptom}')">×</span>
+                </span>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function updateAnalyzeButton() {
+            const button = document.getElementById('analyzeBtn');
+            button.disabled = selectedSymptoms.size === 0;
+        }
+
+        function analyzeSymptoms() {
+            if (selectedSymptoms.size === 0) return;
+            const symptomsArray = Array.from(selectedSymptoms);
+            console.log("Submitting symptoms:", symptomsArray);
+            document.getElementById('symptomsInput').value = Array.from(selectedSymptoms).join(',');
+            document.getElementById('symptomForm').submit();
+        }
+
+        document.getElementById('customSymptom').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addCustomSymptom();
+            }
+        });
+    </script>
+</body>
+</html>

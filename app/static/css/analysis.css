@@ -1,0 +1,362 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #b793db 0%, #89b8ee 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Header */
+        .header {
+            background: #b793db;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.7rem 1.5rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* Hero Section */
+        .hero-section {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .hero-section h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #1e1b4b;
+            margin-bottom: 1rem;
+        }
+        
+        .hero-section p {
+            font-size: 1.2rem;
+            color: rgba(30, 27, 75, 0.8);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Analysis Container */
+        .analysis-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Input Section */
+        .input-section {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e1b4b;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .symptom-input {
+            margin-bottom: 1.5rem;
+        }
+        
+        .symptom-input label {
+            display: block;
+            color: #1e1b4b;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        
+        .symptom-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .symptom-tag {
+            background: linear-gradient(45deg, #e367fc, #64adff);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+        
+        .symptom-tag:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(227, 103, 252, 0.3);
+        }
+        
+        .symptom-tag.selected {
+            background: linear-gradient(45deg, #1e1b4b, #3730a3);
+            box-shadow: 0 4px 15px rgba(30, 27, 75, 0.3);
+        }
+        
+        .custom-symptom {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .custom-symptom input {
+            flex: 1;
+            padding: 0.8rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #1e1b4b;
+            font-size: 1rem;
+        }
+        
+        .add-btn {
+            background: linear-gradient(45deg, #e367fc, #64adff);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(227, 103, 252, 0.3);
+        }
+        
+        .selected-symptoms {
+            margin-bottom: 1.5rem;
+        }
+        
+        .selected-list {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 1rem;
+            min-height: 50px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        .selected-item {
+            background: rgba(30, 27, 75, 0.8);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin: 0.2rem;
+            position: relative;
+        }
+        
+        .remove-symptom {
+            margin-left: 0.5rem;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+        
+        .remove-symptom:hover {
+            opacity: 1;
+        }
+        
+        .analyze-btn {
+            background: linear-gradient(45deg, #e367fc, #64adff);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(227, 103, 252, 0.3);
+        }
+        
+        .analyze-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(227, 103, 252, 0.4);
+        }
+        
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Results Section */
+        .results-section {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #1e1b4b;
+        }
+        
+        .loading i {
+            font-size: 2rem;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+            color: #e367fc;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .result-card {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
+        }
+        
+        .disease-card {
+            border-left-color: #e367fc;
+        }
+        .disease-card p{
+            color: #1e1b4b;
+        }
+        
+        .medicine-card {
+            border-left-color: #64adff;
+        }
+        .medicine-card p{
+            color: #1e1b4b;
+        }
+        
+        .precaution-card {
+            border-left-color: #3730a3;
+        }
+
+        .minor-disease-card{
+            border-left-color: #24db27;
+        }
+        
+        .result-card h3 {
+            color: #1e1b4b;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .confidence {
+            background: rgba(30, 27, 75, 0.1);
+            color: #1e1b4b;
+            padding: 0.2rem 0.8rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .result-card p, .result-card ul {
+            color: rgba(30, 27, 75, 0.8);
+            line-height: 1.6;
+        }
+        
+        .result-card ul {
+            padding-left: 1.5rem;
+        }
+        
+        .result-card li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .disclaimer {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+        
+        .disclaimer i {
+            color: #ffc107;
+            margin-right: 0.5rem;
+        }
+        
+        .disclaimer p {
+            color: #1e1b4b;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .analysis-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .hero-section h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+        }
