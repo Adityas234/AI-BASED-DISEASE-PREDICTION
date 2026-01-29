@@ -139,6 +139,45 @@ def predict():
 
 
 
+@app.route("/api/predict", methods=["POST"])
+def api_predict():
+    try:
+        symptoms = request.form.get("symptoms")
+
+        if not symptoms:
+            return jsonify({"error": "No symptoms provided"}), 400
+
+        # Vectorize
+        X = vectorizer.transform([symptoms])
+
+        # Predict disease
+        predicted_disease = model.predict(X)[0]
+
+        # Lookup in dataset
+        row = disease_data[
+            disease_data["disease"].str.lower()
+            == str(predicted_disease).lower()
+        ]
+
+        if row.empty:
+            return jsonify({
+                "predicted_disease": predicted_disease,
+                "minor_disease": None,
+                "precautions": None,
+                "medicines": None
+            })
+
+        return jsonify({
+            "predicted_disease": predicted_disease,
+            "minor_disease": row.iloc[0]["minor_disease"],
+            "precautions": row.iloc[0]["precautions"],
+            "medicines": row.iloc[0]["medicines"]
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
