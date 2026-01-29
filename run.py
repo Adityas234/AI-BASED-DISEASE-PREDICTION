@@ -97,32 +97,46 @@ def register():
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
-        # Get symptoms text from frontend form
         symptoms = request.form.get("symptoms")
+        print("Received symptoms:", symptoms)
 
         if not symptoms or symptoms.strip() == "":
-            return render_template(
-                "analysis.html",
-                prediction="⚠️ Please enter symptoms"
-            )
+            return render_template("analysis.html", result=None)
 
-        # Transform input text
+        # 1️⃣ Vectorize input
         X = vectorizer.transform([symptoms])
 
-        # Predict
-        prediction = model.predict(X)[0]
+        # 2️⃣ Predict disease
+        predicted_disease = model.predict(X)[0]
+        print("Predicted disease:", predicted_disease)
 
-        return render_template(
-            "analysis.html",
-            prediction=prediction
-        )
+        # 3️⃣ Lookup details from dataset
+        row = disease_data[
+            disease_data["disease"].str.lower()
+            == str(predicted_disease).lower()
+        ]
+
+        if row.empty:
+            result = {
+                "major": predicted_disease,
+                "minor": "Not found in dataset",
+                "precautions": "Consult a doctor",
+                "medicines": "Consult a doctor"
+            }
+        else:
+            result = {
+                "major": predicted_disease,
+                "minor": row.iloc[0]["minor_disease"],
+                "precautions": row.iloc[0]["precautions"],
+                "medicines": row.iloc[0]["medicines"]
+            }
+
+        return render_template("analysis.html", result=result)
 
     except Exception as e:
         print("❌ Prediction error:", e)
-        return render_template(
-            "analysis.html",
-            prediction="❌ Something went wrong. Please try again."
-        )
+        return render_template("analysis.html", result=None)
+
 
 
 
