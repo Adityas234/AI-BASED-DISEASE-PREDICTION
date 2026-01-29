@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import joblib
 import pandas as pd
+import os
 
 app = Flask(__name__, template_folder='app/templates', static_folder='app/static')
 app.secret_key = "your_secret_key"   # required for session handling
@@ -8,12 +9,16 @@ app.secret_key = "your_secret_key"   # required for session handling
 # ----------------------------
 # Load ML model & vectorizer
 # ----------------------------
-model = joblib.load("app/ml_models/model.pkl")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-vectorizer = joblib.load("app/ml_models/vectorizer.pkl")
+model_path = os.path.join(BASE_DIR, "app", "ml_models", "model.pkl")
+vectorizer_path = os.path.join(BASE_DIR, "app", "ml_models", "vectorizer.pkl")
+csv_path = os.path.join(BASE_DIR, "app", "data", "imdb_train_with_minor_disease.csv")
 
+model = joblib.load(model_path)
+vectorizer = joblib.load(vectorizer_path)
+disease_data = pd.read_csv(csv_path)
 
-disease_data = pd.read_csv(r"app\data\imdb_train_with_minor_disease.csv")
 # ----------------------------
 # Routes for frontend pages
 # ----------------------------
