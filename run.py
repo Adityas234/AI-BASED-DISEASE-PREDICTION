@@ -12,12 +12,9 @@ app.secret_key = "your_secret_key"   # required for session handling
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 model_path = os.path.join(BASE_DIR, "app", "ml_models", "model.pkl")
-vectorizer_path = os.path.join(BASE_DIR, "app", "ml_models", "vectorizer.pkl")
 csv_path = os.path.join(BASE_DIR, "app", "data", "imdb_train_with_minor_disease.csv")
 
 model = joblib.load(model_path)
-vectorizer = joblib.load(vectorizer_path)
-print("🔥 RENDER VECTOR VOCAB SIZE:", len(vectorizer.vocabulary_))
 disease_data = pd.read_csv(csv_path)
 
 # ----------------------------
@@ -45,8 +42,7 @@ def analysis():
     if request.method == "POST":
         symptoms = request.form.get("symptoms")
         if symptoms:
-            X = vectorizer.transform([symptoms])
-            predicted_disease = model.predict(X)[0]
+            predicted_disease = model.predict([symptoms])[0]
 
             # Lookup in dataset
             info = disease_data[disease_data["disease"] == predicted_disease].to_dict(orient="records")
@@ -104,11 +100,9 @@ def predict():
         if not symptoms or symptoms.strip() == "":
             return render_template("analysis.html", result=None)
 
-        # 1️⃣ Vectorize input
-        X = vectorizer.transform([symptoms])
-
         # 2️⃣ Predict disease
-        predicted_disease = model.predict(X)[0]
+        predicted_disease = model.predict([symptoms])[0]
+
         print("Predicted disease:", predicted_disease)
 
         # 3️⃣ Lookup details from dataset
@@ -154,8 +148,8 @@ def api_predict():
         if not symptoms:
             return jsonify({"error": "No symptoms provided"}), 400
 
-        X = vectorizer.transform([symptoms])
-        prediction = model.predict(X)[0]
+        prediction = model.predict([symptoms])[0]
+
 
         return jsonify({
             "predicted_disease": prediction
