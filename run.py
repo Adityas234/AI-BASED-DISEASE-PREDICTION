@@ -13,13 +13,13 @@ model = joblib.load("app/ml_models/model.pkl")
 vectorizer = joblib.load("app/ml_models/vectorizer.pkl")
 
 
-disease_data = pd.read_csv(r"E:\FINAL\app\data\imdb_train_with_minor_disease.csv")
+disease_data = pd.read_csv(r"app\data\imdb_train_with_minor_disease.csv")
 # ----------------------------
 # Routes for frontend pages
 # ----------------------------
 @app.route("/")
 def home():
-    return render_template("home2.html")
+    return render_template("index.html")
 
 @app.route("/signin.html")
 def signin():
