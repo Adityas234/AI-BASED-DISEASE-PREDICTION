@@ -123,7 +123,7 @@ def predict():
                 "major": predicted_disease,
                 "minor": row.iloc[0]["minor_disease"],
                 "precautions": row.iloc[0]["precautions"],
-                "medicines": row.iloc[0]["medicines"]
+                "medicines": row.iloc[0]["medicine"]
             }
 
         return render_template("analysis.html", result=result)
