@@ -1,2 +1,3 @@
 3.10.13
-gunicorn
+gunicorn==21.2.0
+
