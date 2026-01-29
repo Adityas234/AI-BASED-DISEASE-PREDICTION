@@ -17,6 +17,7 @@ csv_path = os.path.join(BASE_DIR, "app", "data", "imdb_train_with_minor_disease.
 
 model = joblib.load(model_path)
 vectorizer = joblib.load(vectorizer_path)
+print("🔥 RENDER VECTOR VOCAB SIZE:", len(vectorizer.vocabulary_))
 disease_data = pd.read_csv(csv_path)
 
 # ----------------------------
