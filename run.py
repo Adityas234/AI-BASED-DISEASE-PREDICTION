@@ -96,20 +96,34 @@ def register():
 # ----------------------------
 @app.route("/predict", methods=["POST"])
 def predict():
-    # Get symptoms text from frontend form
-    symptoms = request.form.get("symptoms")
+    try:
+        # Get symptoms text from frontend form
+        symptoms = request.form.get("symptoms")
 
-    if not symptoms:
-        return render_template("analysis.html", prediction="Please enter symptoms")
+        if not symptoms or symptoms.strip() == "":
+            return render_template(
+                "analysis.html",
+                prediction="⚠️ Please enter symptoms"
+            )
 
-    # Convert text using vectorizer
-    X = vectorizer.transform([symptoms])
+        # Transform input text
+        X = vectorizer.transform([symptoms])
 
-    # Predict using model
-    prediction = model.predict(X)[0]
+        # Predict
+        prediction = model.predict(X)[0]
 
-    # Render same page with result
-    return render_template("analysis.html", prediction=prediction)
+        return render_template(
+            "analysis.html",
+            prediction=prediction
+        )
+
+    except Exception as e:
+        print("❌ Prediction error:", e)
+        return render_template(
+            "analysis.html",
+            prediction="❌ Something went wrong. Please try again."
+        )
+
 
 
 if __name__ == "__main__":

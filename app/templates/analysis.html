@@ -67,7 +67,7 @@
                 </div>
 
                 <!-- Form to submit symptoms to Flask -->
-                <form method="POST" id="symptomForm">
+                <form method="POST" action="/predict" id="symptomForm">
                     <input type="hidden" name="symptoms" id="symptomsInput">
                     <button type="button" class="analyze-btn" id="analyzeBtn" onclick = "analyzeSymptoms()"disabled>
                         <i class="fas fa-search"></i> Analyze My Symptoms
