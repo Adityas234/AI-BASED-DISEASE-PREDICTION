@@ -130,7 +130,7 @@ def predict():
 
     except Exception as e:
         print("❌ Prediction error:", e)
-        return render_template("analysis.html", result=None)
+        return str(e), 500
 
 
 
