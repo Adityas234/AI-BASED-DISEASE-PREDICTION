@@ -52,10 +52,8 @@
                 <div class="symptom-input">
                     <label>Add custom symptom:</label>
                     <div class="custom-symptom">
-                        <input type="text" id="customSymptom" placeholder="Enter your symptom...">
-                        <button class="add-btn" type="button" onclick="addCustomSymptom()">
-                            <i class="fas fa-plus"></i> Add
-                        </button>
+                        <input type="text" id="customSymptom" placeholder="Type symptom...">
+                        <div id="suggestions" class="suggestions-box"></div>
                     </div>
                 </div>
 
@@ -67,7 +65,7 @@
                 </div>
 
                 <!-- Form to submit symptoms to Flask -->
-                <form method="POST" action="/predict" id="symptomForm">
+                <form method="POST" action="/analysis.html" id="symptomForm">
                     <input type="hidden" name="symptoms" id="symptomsInput">
                     <button type="button" class="analyze-btn" id="analyzeBtn" onclick = "analyzeSymptoms()"disabled>
                         <i class="fas fa-search"></i> Analyze My Symptoms
@@ -81,33 +79,121 @@
         <i class="fas fa-chart-line"></i>
         Analysis Results
     </h2>
+    {% if selected_symptoms %}
+<div class="result-card">
+    <h3>🧾 Selected Symptoms</h3>
+    <div class="selected-container">
+        {% for s in selected_symptoms %}
+            <span class="selected-item">{{ s }}</span>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 
-    {% if result %}
-    <div class="result-card disease-card">
-        <h3><i class="fas fa-diagnoses"></i> Major Disease</h3>
-        <p><strong>{{ result.major }}</strong></p>
-    </div>
+{% if result %}
 
-    <div class="result-card minor-disease-card">
-        <h3><i class="fas fa-notes-medical"></i> Minor Disease</h3>
-        <p><b>{{ result.minor }}</b></p>
-    </div>
+    {% if result.type == "alert" %}
+        <div class="result-card alert-card">
+            <h3>⚠️ Alert</h3>
+            <p>{{ result.message }}</p>
+        </div>
 
-    <div class="result-card precaution-card">
-        <h3><i class="fas fa-shield-alt"></i> Precautions</h3>
-        <p><b>{{ result.precautions }}</b></p>
-    </div>
+    {% elif result.type == "uncertain" %}
+        <div class="result-card uncertain-card">
+            <h3>⚠️ Not Enough Data</h3>
+            <p>{{ result.message }}</p>
+        </div>
 
-    <div class="result-card medicine-card">
-        <h3><i class="fas fa-pills"></i> Recommended Medicines</h3>
-        <p><b>{{ result.medicines }}</b></p>
-    </div>
-    {% else %}
-    <div style="text-align: center; padding: 2rem; color: rgba(30, 27, 75, 0.5);">
-        <i class="fas fa-clipboard-list" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-        <p>Select your symptoms and click "Analyze My Symptoms" to get your health insights.</p>
-    </div>
+    {% elif result.type == "prediction" %}
+
+        {% for item in result.results %}
+        <div class="result-card disease-card">
+
+            <!-- DISEASE -->
+            <h3 class="disease-title">
+                {{ item.disease }}
+                <span class="confidence-badge">
+                    {{ (item.confidence * 100) | round(1) }}%
+                </span>
+            </h3>
+
+            <!-- CONFIDENCE BAR -->
+            <div class="confidence-bar">
+                <div class="confidence-fill 
+                    {% if item.confidence > 0.7 %}high
+                    {% elif item.confidence > 0.4 %}medium
+                    {% else %}low
+                    {% endif %}
+                "
+                style="width: {{ (item.confidence * 100) | round(1) }}%;">
+                </div>
+            </div>
+
+            <!-- COVERAGE -->
+            <p class="coverage-text">
+                📊 Symptom Coverage: 
+                <strong>{{ (item.coverage * 100) | round(1) }}%</strong>
+            </p>
+
+            <!-- DESCRIPTION -->
+            <p class="description">
+                <strong>Description:</strong> {{ item.description }}
+            </p>
+
+            <!-- EXPLANATION -->
+            <div class="explanation">
+                <h4>🧠 Why this prediction?</h4>
+
+                {% if item.explanation %}
+                <ul>
+                    {% for exp in item.explanation %}
+                    <li>
+                        {{ exp.symptom }}
+                        <span class="impact {{ exp.impact }}">
+                            {{ exp.impact }}
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p>No explanation available</p>
+                {% endif %}
+            </div>
+
+            <!-- PRECAUTIONS -->
+            <div class="precautions">
+                <h4>🛡️ Precautions</h4>
+
+                {% if item.precautions %}
+                <ul>
+                    {% for p in item.precautions %}
+                    <li>{{ p }}</li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p>No precautions available</p>
+                {% endif %}
+            </div>
+
+            <!-- LOW CONFIDENCE -->
+            {% if result.note %}
+            <p class="low-confidence-note">
+                ⚠️ {{ result.note }}
+            </p>
+            {% endif %}
+
+        </div>
+        {% endfor %}
+
     {% endif %}
+
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-clipboard-list"></i>
+    <p>Select symptoms and click analyze</p>
+</div>
+<pre>{{ item }}</pre>
+{% endif %}
 </div>
         </div>
 
@@ -199,6 +285,39 @@
                 e.preventDefault();
                 addCustomSymptom();
             }
+        });
+
+        const input = document.getElementById("customSymptom");
+        const box = document.getElementById("suggestions");
+
+        input.addEventListener("input", async function () {
+            const query = input.value.trim();
+
+            if (!query) {
+                box.innerHTML = "";
+                return;
+            }
+
+            const res = await fetch(`/api/symptoms?q=${query}`);
+            const data = await res.json();
+
+            box.innerHTML = "";
+
+            data.forEach(symptom => {
+                const div = document.createElement("div");
+                div.className = "suggestion-item";
+                div.innerText = symptom;
+
+                div.onclick = () => {
+                    selectedSymptoms.add(symptom);
+                    input.value = "";
+                    box.innerHTML = "";
+                    updateSelectedList();
+                    updateAnalyzeButton();
+                };
+
+                box.appendChild(div);
+            });
         });
     </script>
 </body>

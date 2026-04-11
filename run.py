@@ -3,22 +3,208 @@ import joblib
 import pandas as pd
 import os
 
-app = Flask(__name__, template_folder='app/templates', static_folder='app/static')
-app.secret_key = "your_secret_key"   # required for session handling
+# ----------------------------
+# SYMPTOM NORMALIZATION MAP
+# ----------------------------
+SYMPTOM_MAP = {
+    "head pain": "headache",
+    "stomach ache": "stomach pain",
+    "tiredness": "fatigue",
+    "weakness": "fatigue",
+    "cold": "runny nose",
+    "body pain": "body ache",
+}
+
+def normalize_symptom(symptom):
+    symptom = symptom.lower().strip().replace("_", " ")
+    return SYMPTOM_MAP.get(symptom, symptom)
 
 # ----------------------------
-# Load ML model & vectorizer
+# APP INIT
 # ----------------------------
+app = Flask(__name__, template_folder='app/templates', static_folder='app/static')
+app.secret_key = "your_secret_key"
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-model_path = os.path.join(BASE_DIR, "app", "ml_models", "model.pkl")
-csv_path = os.path.join(BASE_DIR, "app", "data", "imdb_train_with_minor_disease.csv")
+# ----------------------------
+# LOAD MODEL + DATA
+# ----------------------------
+model = joblib.load(os.path.join(BASE_DIR, "app/ml_models/model1.pkl"))
+symptom_list = joblib.load(os.path.join(BASE_DIR, "app/ml_models/symptoms.pkl"))
 
-model = joblib.load(model_path)
-disease_data = pd.read_csv(csv_path)
+# Severity
+severity_df = pd.read_csv(os.path.join(BASE_DIR, "app/data/Symptom-severity.csv"))
+severity_df["Symptom"] = severity_df["Symptom"].str.lower().str.strip().str.replace("_", " ")
+severity_dict = dict(zip(severity_df["Symptom"], severity_df["weight"]))
+
+# Description
+desc_df = pd.read_csv(os.path.join(BASE_DIR, "app/data/symptom_Description.csv"))
+desc_df["Disease"] = desc_df["Disease"].str.lower().str.strip()
+desc_dict = dict(zip(desc_df["Disease"], desc_df["Description"]))
+
+# Precautions
+prec_df = pd.read_csv(os.path.join(BASE_DIR, "app/data/symptom_precaution.csv"))
+prec_df["Disease"] = prec_df["Disease"].str.lower().str.strip()
+
+prec_dict = {}
+for _, row in prec_df.iterrows():
+    precautions = [
+        str(row[col]).strip()
+        for col in prec_df.columns if "Precaution" in col and pd.notna(row[col])
+    ]
+    prec_dict[row["Disease"]] = precautions
 
 # ----------------------------
-# Routes for frontend pages
+# RULE ENGINE
+# ----------------------------
+def rule_based_checks(symptoms):
+    symptoms = [s.lower() for s in symptoms]
+
+    if "chest pain" in symptoms and "breathlessness" in symptoms:
+        return "⚠️ Possible heart-related emergency. Seek immediate medical help."
+
+    if "high fever" in symptoms and "vomiting" in symptoms:
+        return "⚠️ Possible severe infection. Consult a doctor."
+
+    if "unconsciousness" in symptoms:
+        return "🚨 Emergency condition. Immediate attention required."
+
+    return None
+
+# ----------------------------
+# VECTOR CREATION
+# ----------------------------
+def create_weighted_vector(input_symptoms):
+    vector = [0] * len(symptom_list)
+
+    for symptom in input_symptoms:
+        if symptom in symptom_list:
+            idx = symptom_list.index(symptom)
+            weight = severity_dict.get(symptom, 1)
+            vector[idx] = weight
+
+    return vector
+
+# ----------------------------
+# EXPLANATION ENGINE
+# ----------------------------
+def generate_explanation(input_symptoms):
+    explanation = []
+
+    for symptom in input_symptoms:
+        weight = severity_dict.get(symptom, 1)
+
+        if weight >= 5:
+            impact = "strong"
+        elif weight >= 3:
+            impact = "moderate"
+        else:
+            impact = "weak"
+
+        explanation.append({
+            "symptom": symptom,
+            "impact": impact
+        })
+
+    return explanation
+
+# ----------------------------
+# TOP PREDICTIONS
+# ----------------------------
+def get_top_predictions(vector, input_symptoms, top_n=3):
+    input_df = pd.DataFrame([vector], columns=symptom_list)
+    probs = model.predict_proba(input_df)[0]
+    top_indices = probs.argsort()[-top_n:][::-1]
+
+    results = []
+
+    for idx in top_indices:
+        disease = model.classes_[idx]
+
+        # ----------------------------
+        # COVERAGE (REAL)
+        # ----------------------------
+        matched = sum([
+            1 for s in input_symptoms if s in symptom_list
+        ])
+        
+
+        coverage_score = matched / max(len(input_symptoms), 1)
+
+        # ----------------------------
+        # HYBRID SCORE (CLAMPED)
+        # ----------------------------
+        hybrid_score = (0.7 * probs[idx]) + (0.3 * coverage_score)
+        hybrid_score = min(1.0, hybrid_score)
+
+        # ----------------------------
+        # BUILD RESULT
+        # ----------------------------
+        results.append({
+            "disease": disease,
+            "confidence": round(hybrid_score, 3),
+            "raw_confidence": round(probs[idx], 3),
+            "coverage": round(coverage_score, 2),
+            "description": desc_dict.get(disease, "No description available"),
+            "precautions": prec_dict.get(disease, ["No precautions available"]),
+            "explanation": [
+                {
+                    "symptom": s,
+                    "impact": (
+                        "strong" if severity_dict.get(s, 1) >= 5
+                        else "moderate" if severity_dict.get(s, 1) >= 3
+                        else "weak"
+                    )
+                }
+                for s in input_symptoms
+            ]
+        })
+
+    # sort by confidence
+    results = sorted(results, key=lambda x: x["confidence"], reverse=True)
+
+    return results
+
+# ----------------------------
+# MAIN SYSTEM
+# ----------------------------
+def predict_system(input_symptoms):
+
+    # normalize everything FIRST
+    input_symptoms = [normalize_symptom(s) for s in input_symptoms]
+
+    # rule check
+    rule = rule_based_checks(input_symptoms)
+    if rule:
+        return {
+            "type": "alert",
+            "message": rule
+        }
+
+    vector = create_weighted_vector(input_symptoms)
+    top_preds = get_top_predictions(vector, input_symptoms)
+
+    if not top_preds:
+        return {
+            "type": "uncertain",
+            "message": "No prediction could be made."
+        }
+
+    if top_preds[0]["confidence"] < 0.3:
+        return {
+            "type": "prediction",
+            "results": top_preds,
+            "note": "Low confidence prediction. Add more symptoms."
+        }
+
+    return {
+        "type": "prediction",
+        "results": top_preds
+    }
+
+# ----------------------------
+# ROUTES (UNCHANGED)
 # ----------------------------
 @app.route("/")
 def home():
@@ -39,40 +225,54 @@ def reminder():
 @app.route("/analysis.html", methods=["GET", "POST"])
 def analysis():
     result = None
+    selected_symptoms = []
+
     if request.method == "POST":
-        symptoms = request.form.get("symptoms")
-        if symptoms:
-            predicted_disease = model.predict([symptoms])[0]
+        raw = request.form.get("symptoms")
 
-            # Lookup in dataset
-            info = disease_data[disease_data["disease"] == predicted_disease].to_dict(orient="records")
-            if info:
-                info = info[0]
-                result = {
-                    "major": predicted_disease,
-                    "minor": info.get("minor_disease", "N/A"),
-                    "precautions": info.get("precautions", "N/A"),
-                    "medicines": info.get("medicine", "N/A"),
-                }
-            else:
-                result = {
-                    "major": predicted_disease,
-                    "minor": "Not available",
-                    "precautions": "Not available",
-                    "medicines": "Not available",
-                }
+        if not raw:
+            return render_template(
+                "analysis.html",
+                result={
+                    "type": "uncertain",
+                    "message": "No symptoms provided"
+                },
+                selected_symptoms=[]
+            )
 
-    return render_template("analysis.html", result=result)
+        selected_symptoms = [s.strip() for s in raw.split(",") if s.strip()]
 
+        # 🔥 USE YOUR REAL SYSTEM
+        result = predict_system(selected_symptoms)
+
+    return render_template(
+        "analysis.html",
+        result=result,
+        selected_symptoms=selected_symptoms
+    )
 
 # ----------------------------
-# Auth routes (dummy for now)
+# AUTOSUGGEST API
+# ----------------------------
+@app.route("/api/symptoms", methods=["GET"])
+def get_symptoms():
+    query = request.args.get("q", "").lower()
+
+    suggestions = [
+        s for s in symptom_list
+        if query in s
+    ][:10]
+
+    return jsonify(suggestions)
+
+# ----------------------------
+# AUTH ROUTES
 # ----------------------------
 @app.route("/login", methods=["POST"])
 def login():
     email = request.form.get("email")
     password = request.form.get("password")
-    # TODO: validate from DB
+
     if email == "test@test.com" and password == "123":
         session["user"] = email
         return redirect(url_for("analysis"))
@@ -81,87 +281,28 @@ def login():
 
 @app.route("/register", methods=["POST"])
 def register():
-    name = request.form.get("name") 
-    email = request.form.get("email")
-    password = request.form.get("password")
-    # TODO: save to DB
     return redirect(url_for("signin"))
 
-
 # ----------------------------
-# Prediction API (analysis.html → model → analysis.html)
+# API ROUTE
 # ----------------------------
 @app.route("/predict", methods=["POST"])
-def predict():
-    try:
-        symptoms = request.form.get("symptoms")
-        print("Received symptoms:", symptoms)
-
-        if not symptoms or symptoms.strip() == "":
-            return render_template("analysis.html", result=None)
-
-        # 2️⃣ Predict disease
-        predicted_disease = model.predict([symptoms])[0]
-
-        print("Predicted disease:", predicted_disease)
-
-        # 3️⃣ Lookup details from dataset
-        row = disease_data[
-            disease_data["disease"].str.lower()
-            == str(predicted_disease).lower()
-        ]
-
-        if row.empty:
-            result = {
-                "major": predicted_disease,
-                "minor": "Not found in dataset",
-                "precautions": "Consult a doctor",
-                "medicines": "Consult a doctor"
-            }
-        else:
-            result = {
-                "major": predicted_disease,
-                "minor": row.iloc[0]["minor_disease"],
-                "precautions": row.iloc[0]["precautions"],
-                "medicines": row.iloc[0]["medicine"]
-            }
-
-        return render_template("analysis.html", result=result)
-
-    except Exception as e:
-        print("❌ Prediction error:", e)
-        return str(e), 500
-
-
-
-
-
-@app.route("/api/predict", methods=["POST"])
 def api_predict():
     try:
-        # Accept BOTH JSON and form-data safely
-        symptoms = (
-            request.form.get("symptoms")
-            or (request.json.get("symptoms") if request.is_json else None)
-        )
+        data = request.get_json()
+        symptoms = data.get("symptoms", [])
 
         if not symptoms:
             return jsonify({"error": "No symptoms provided"}), 400
 
-        prediction = model.predict([symptoms])[0]
-
-
-        return jsonify({
-            "predicted_disease": prediction
-        })
+        result = predict_system(symptoms)
+        return jsonify(result)
 
     except Exception as e:
-        print("❌ API ERROR:", str(e))
         return jsonify({"error": str(e)}), 500
 
-
-
-
+# ----------------------------
+# RUN
+# ----------------------------
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(debug=True)
